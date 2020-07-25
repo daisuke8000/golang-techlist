@@ -1,0 +1,56 @@
+package main
+
+import (
+	"github.com/flosch/pongo2"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"net/http"
+	"time"
+)
+
+const tmplPath = "src/template/"
+
+var e = createMux()
+
+func main() {
+	// Routes
+	e.GET("/", articleIndex)
+	// Start server
+	e.Logger.Fatal(e.Start(":8080"))
+}
+
+func createMux() *echo.Echo {
+	// Echo Instance
+	e := echo.New()
+	// Middleware
+	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
+	e.Use(middleware.Gzip())
+
+	e.Static("/css", "src/css")
+	e.Static("/js", "src/js")
+
+	return e
+}
+
+// Hundler
+func articleIndex(c echo.Context) error {
+	//return c.String(http.StatusOK, "Hello, Would!")
+	data := map[string]interface{}{
+		"Message": "Hello, World!",
+		"Now":     time.Now(),
+	}
+	return render(c, "article/index.html", data)
+}
+
+func htmlBlob(file string, data map[string]interface{}) ([]byte, error) {
+	return pongo2.Must(pongo2.FromCache(tmplPath + file)).ExecuteBytes(data)
+}
+
+func render(c echo.Context, file string, data map[string]interface{}) error {
+	b, err := htmlBlob(file, data)
+	if err != nil {
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	return c.HTMLBlob(http.StatusOK, b)
+}
