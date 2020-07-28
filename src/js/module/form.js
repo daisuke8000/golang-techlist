@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         mode.url = `/${window.location.pathname.split('/')[1]}`;
     }
     const { method, url } = mode;
+    // CSRF トークンを取得します。
+    const csrfToken = document.getElementsByName('csrf')[0].content;
 
     // input 要素にフォーカスが合った状態で Enter が押されると form が送信されます。
     // 今回は Enter キーで form が送信されないように挙動を制御します。
@@ -74,4 +76,34 @@ document.addEventListener('DOMContentLoaded', () => {
         // URL を指定して画面を遷移させます。
         window.location.href = url;
     });
+    // 保存処理を実行するイベントを設定します。
+    saveBtn.addEventListener('click', event => {
+        event.preventDefault();
+
+        // フォームに入力された内容を取得します。
+        const fd = new FormData(form);
+
+        let status;
+        // fetchAPIを利用してリクエストを送信します。
+        fetch(url, {
+            method: method,
+            headers: { 'X-CSRF-Token': csrfToken },
+            body: fd
+        })
+            .then(res => {
+                status = res.status;
+                return res.json();
+            })
+            .then(res => {
+                console.log(JSON.stringify(body));
+
+                if (status === 200) {
+                // 成功時は画面遷移させる。
+                window.location.href = url;
+                }
+                if (body.ValidationErrors) {
+                }
+            })
+            .catch(err => console.error(err));
+    })
 });
