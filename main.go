@@ -12,7 +12,6 @@ import (
 	"os"
 )
 
-
 var db *sqlx.DB
 var e = createMux()
 
@@ -46,13 +45,13 @@ func createMux() *echo.Echo {
 	return e
 }
 
-func connectDB() *sqlx.DB{
+func connectDB() *sqlx.DB {
 	dsn := os.Getenv("DSN")
 	db, err := sqlx.Open("mysql", dsn)
-	if err != nil{
+	if err != nil {
 		e.Logger.Fatal(err)
 	}
-	if err := db.Ping(); err != nil{
+	if err := db.Ping(); err != nil {
 		e.Logger.Fatal(err)
 	}
 	log.Println("db connection succeeded")
@@ -61,10 +60,10 @@ func connectDB() *sqlx.DB{
 
 // CustomValidator ...
 type CustomValidator struct {
-   validator *validator.Validate
- }
+	validator *validator.Validate
+}
 
 // Validate ...
 func (cv *CustomValidator) Validate(i interface{}) error {
-   return cv.validator.Struct(i)
- }
+	return cv.validator.Struct(i)
+}
