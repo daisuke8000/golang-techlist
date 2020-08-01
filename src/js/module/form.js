@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mode.url = `/articles/${window.location.pathname.split('/')[2]}`;
     }
     const { method, url } = mode;
+
     // CSRF トークンを取得します。
     const csrfToken = document.getElementsByName('csrf')[0].content;
 
@@ -49,8 +50,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // プレビューを開くイベントを設定します。
     previewOpenBtn.addEventListener('click', event => {
-        // form の「本文」に入力された内容をプレビューにコピーします。
-        // articleFormPreviewTextArea.innerHTML = articleFormBodyTextArea.value;
         // form の「本文」に入力された Markdown を HTML に変換してプレビューに埋め込みます。
         articleFormPreviewTextArea.innerHTML = md.render(articleFormBodyTextArea.value);
 
@@ -78,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // URL を指定して画面を遷移させます。
         window.location.href = url;
     });
+
     // 保存処理を実行するイベントを設定します。
     saveBtn.addEventListener('click', event => {
         event.preventDefault();
@@ -89,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const fd = new FormData(form);
 
         let status;
-        // fetchAPIを利用してリクエストを送信します。
+
+        // fetch API を利用してリクエストを送信します。
         fetch(`/api${url}`, {
             method: method,
             headers: { 'X-CSRF-Token': csrfToken },
@@ -99,22 +100,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 status = res.status;
                 return res.json();
             })
-            .then(res => {
+            .then(body => {
                 console.log(JSON.stringify(body));
 
                 if (status === 200) {
+                    // 成功時は一覧画面に遷移させます。
                     window.location.href = url;
                 }
+
                 if (body.ValidationErrors) {
+                    // バリデーションエラーがある場合の処理をここに記載します。
                     showErrors(body.ValidationErrors);
                 }
             })
             .catch(err => console.error(err));
     });
+
+    // バリデーションエラーを表示する関数
     const showErrors = messages => {
+        // 引数の値が配列であることを確認します。
         if (Array.isArray(messages) && messages.length != 0) {
+            // 複数メッセージを格納するためのフラグメントを作成します。
             const fragment = document.createDocumentFragment();
 
+            // メッセージをループ処理します。
             messages.forEach(message => {
                 // 単一メッセージを格納するためのフラグメントを作成します。
                 const frag = document.createDocumentFragment();
@@ -122,10 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // テンプレートをクローンしてフラグメントに追加します。
                 frag.appendChild(errorTmpl.cloneNode(true));
 
-                // エラー要素にメッセージをセットします
+                // エラー要素にメッセージをセットします。
                 frag.querySelector('.article-form__error').innerHTML = message;
 
-                // エラー要素を親フラグメントに追加します
+                // エラー要素を親フラグメントに追加します。
                 fragment.appendChild(frag);
             });
 
